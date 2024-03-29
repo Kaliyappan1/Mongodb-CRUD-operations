@@ -1,5 +1,16 @@
 {
+  "name": "mongodb-crud-operations",
+  "version": "1.0.0",
+  "description": "<h2 color=\"red\">using this comment</h2>\r <h5>npm install mongodb</h5>",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "mongodb": "^6.4.0"
+    "dotenv": "^16.4.5",
+    "mongodb": "^6.5.0"
   }
 }

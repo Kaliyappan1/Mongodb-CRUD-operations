@@ -1,98 +1,68 @@
 const { MongoClient } = require('mongodb');
+require('dotenv').config()
+// MongoDB URI
+const uri = process.env.URI;
+// Database Name
+const dbName = "kali";
+// Collection Name
+const collectionName = "kali";
 
-const uri = "mongodb+srv://kali:kali123@kaliyappan.8uabkqs.mongodb.net/"; // MongoDB URI
-const client = new MongoClient(uri);
-
-async function connectDB() {
-    try {
-        await client.connect();
-        console.log("Connected to MongoDB");
-    } catch (err) {
-        console.error("Error connecting to MongoDB:", err);
-    }
+// Function to connect to MongoDB
+async function connectToDatabase() {
+    const client = new MongoClient(uri);
+    await client.connect();
+    return client.db(dbName).collection(collectionName);
 }
 
-async function closeDB() {
-    try {
-        await client.close();
-        console.log("Disconnected from MongoDB");
-    } catch (err) {
-        console.error("Error closing MongoDB connection:", err);
-    }
+// Function to insert a document
+async function createDocument(data) {
+    const collection = await connectToDatabase();
+    const result = await collection.insertOne(data);
+    console.log(`Document inserted with _id: ${result.insertedId}`);
 }
 
-async function create(kali, document) {
-    try {
-        const db = client.db();
-        const collection = db.collection(kali);
-        const result = await collection.insertOne(document);
-        console.log("Document created:", result.insertedId);
-    } catch (err) {
-        console.error("Error creating document:", err);
-    }
+// Function to read all documents
+async function readDocuments() {
+    const collection = await connectToDatabase();
+    const documents = await collection.find().toArray();
+    console.log("Documents:");
+    console.log(documents);
 }
 
-async function read(kali, query) {
-    try {
-        const db = client.db();
-        const collection = db.collection(kali);
-        const result = await collection.find(query).toArray();
-        console.log("Documents found:", result);
-    } catch (err) {
-        console.error("Error reading document:", err);
-    }
+// Function to update a document
+async function updateDocument(query, newData) {
+    const collection = await connectToDatabase();
+    const result = await collection.updateOne(query, { $set: newData });
+    console.log(`${result.modifiedCount} document(s) updated`);
 }
 
-async function update(kali, query, update) {
-    try {
-        const db = client.db();
-        const collection = db.collection(kali);
-        const result = await collection.updateOne(query, { $set: update });
-        console.log("Document updated:", result.modifiedCount);
-    } catch (err) {
-        console.error("Error updating document:", err);
-    }
+// Function to delete a document
+async function deleteDocument(query) {
+    const collection = await connectToDatabase();
+    const result = await collection.deleteOne(query);
+    console.log(`${result.deletedCount} document(s) deleted`);
 }
 
-async function delate(kali, query) {
-    try {
-        const db = client.db();
-        const collection = db.collection(kali);
-        const result = await collection.deleteOne(query);
-        console.log("Document deleted:", result.deletedCount);
-    } catch (err) {
-        console.error("Error deleting document:", err);
-    }
-}
-
+// Main function to handle command-line arguments
 async function main() {
-    await connectDB();
-
-    const [operation, kali, ...args] = process.argv.slice(2);
+    const [, , operation, ...args] = process.argv;
 
     switch (operation) {
         case 'create':
-            const document = JSON.parse(args[0]);
-            await create(kali, document);
+            await createDocument(JSON.parse(args[0]));
             break;
         case 'read':
-            const query = JSON.parse(args[0]);
-            await read(kali, query);
+            await readDocuments();
             break;
         case 'update':
-            const updateQuery = JSON.parse(args[0]);
-            const updateData = JSON.parse(args[1]);
-            await update(kali, updateQuery, updateData);
+            await updateDocument(JSON.parse(args[0]), JSON.parse(args[1]));
             break;
         case 'delete':
-            const deleteQuery = JSON.parse(args[0]);
-            await delate(kali, deleteQuery);
+            await deleteDocument(JSON.parse(args[0]));
             break;
         default:
-            console.log("Invalid operation");
+            console.log("Invalid operation. Usage: node filename.js <operation> <arguments>");
     }
-
-    await closeDB();
 }
 
 main().catch(console.error);
